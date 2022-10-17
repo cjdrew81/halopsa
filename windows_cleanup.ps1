@@ -1,3 +1,7 @@
+param(
+[string]$TicketID
+)
+
 $Date = Get-Date -Format 'dd-MM-yy'
 $objShell = New-Object -ComObject Shell.Application
 $objFolder = $objShell.Namespace(0xA)
@@ -145,7 +149,7 @@ $DiskInfo = Get-PhysicalDisk | Select mediatype,friendlyname,operationalstatus,h
 #$attachment = new-object Net.Mail.Attachment("$OutFilePath")
 $fromaddress = 'reports@cloud10.it'
 $toaddress = 'support@cloud10.it'
-$Subject = "Hard Drive Report - $($ENV:COMPUTERNAME)"
+$Subject = "Hard Drive Report - $($ENV:COMPUTERNAME) - Update Ticket [ID:00$($TicketID)] "
 $port = '25'
 $message = New-Object System.Net.Mail.MailMessage
 $message.IsBodyHTML = $True
