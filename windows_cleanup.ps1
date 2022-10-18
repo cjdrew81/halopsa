@@ -2,26 +2,58 @@ param(
 [string]$TicketID
 )
 
+$SpaceReport = @()
+$FreespaceBefore = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SpaceReport += "Free Space at start of script - $($FreeSpaceBefore)"
+
+# This will empty the recycle bin
+
 $Date = Get-Date -Format 'dd-MM-yy'
 $objShell = New-Object -ComObject Shell.Application
 $objFolder = $objShell.Namespace(0xA)
-$objFolder.items() | %{ remove-item $_.path -Recurse -Confirm:$false}
+$objFolder.items() | %{ remove-item $_.path -Recurse -Confirm:$true}
 
-$FreespaceBefore = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SpaceReport += "Free Space after Empty Recycle Bin - $($FreeSpace)" 
 
-$SpaceReport += get-item c:\hiber.sys
+$Hiber = get-childitem -Force | ? name -eq hiber.sys
+If ($Hiber){
+$HiberSize = $hiber.length / 1024000000 
 powercfg /H off
+$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SpaceReport += "Free Space after disabling hibernation - $($FreeSpace)"
+}
 
+test-path C:\Config.Msi
+test-path c:\Intel
+test-path c:\PerfLogs
+test-path c:\swsetup
+test-path $env:windir\memory.dmp
 
-Write-host "Deleting Rouge folders" -foreground yellow
-if (test-path C:\Config.Msi) {remove-item -Path C:\Config.Msi -force -recurse}
-if (test-path c:\Intel) {remove-item -Path c:\Intel -force -recurse}
-if (test-path c:\PerfLogs) {remove-item -Path c:\PerfLogs -force -recurse}
-if (test-path c:\swsetup) {remove-item -Path c:\swsetup -force -recurse} # HP Software and Driver Repositry
-if (test-path $env:windir\memory.dmp) {remove-item $env:windir\memory.dmp -force}
+if (test-path C:\Config.Msi) {
+Get-Item 'C:\Config.msi'
+#remove-item -Path C:\Config.Msi -force -recurse
+}
+if (test-path c:\Intel) {
+Get-ChildItem 'c:\Intel' -Recurse -Force
+#remove-item -Path c:\Intel -force -recurse
+}
+if (test-path c:\PerfLogs){
+Get-ChildItem 'c:\PerfLogs' -Recurse -Force
+#remove-item -Path c:\PerfLogs -force -recurse
+}
+if (test-path c:\swsetup) {
+Get-ChildItem 'c:\swsetup' -Recurse -Force
+#remove-item -Path c:\swsetup -force -recurse
+} # HP Software and Driver Repositry
+if (test-path $env:windir\memory.dmp) {
+#remove-item $env:windir\memory.dmp -force
+}
 
-Write-host "Deleting Windows Error Reporting files" -foreground yellow
+# Deleting Windows Error Reporting files
 if (test-path C:\ProgramData\Microsoft\Windows\WER) {Get-ChildItem -Path C:\ProgramData\Microsoft\Windows\WER -Recurse | Remove-Item -force -recurse}
+
+
 
 Write-host "Removing System and User Temp Files" -foreground yellow
 Remove-Item -Path "$env:windir\Temp\*" -Force -Recurse
@@ -36,6 +68,9 @@ Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Windows\IEDownloadHistory\
 Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Windows\INetCache\*" -Force -Recurse
 Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Windows\INetCookies\*" -Force -Recurse
 Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Terminal Server Client\Cache\*" -Force -Recurse
+$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SpaceReport += "Free space after removing system and user temp files - $($FreeSpace)"
+
 
 Write-host "Removing Windows Updates Downloads" -foreground yellow
 Stop-Service wuauserv -Force -Verbose
@@ -46,6 +81,8 @@ $SpaceReport += Get-Item $env:windir\Logs\CBS\* -force -recurse
 Remove-Item $env:windir\Logs\CBS\* -force -recurse
 Start-Service wuauserv -Verbose
 Start-Service TrustedInstaller -Verbose
+$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SpaceReport += "Free Space after removing WIndows Updates cache - $($FreeSpace)"
 
 Write-host "Checkif Windows Cleanup exists" -foreground yellow
 #Mainly for 2008 servers
@@ -92,27 +129,35 @@ if  (-not (get-itemproperty -path 'HKLM:\Software\Microsoft\Windows\CurrentVersi
 }
 
 Start-Process -FilePath CleanMgr.exe -ArgumentList $StateRun  -WindowStyle Hidden -Wait
-
+$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SPaceReport += "Free space after running disk cleanup tool - $($FreeSpace)"
 
 wevtutil el | Foreach-Object {Write-Host "Clearing $_"; wevtutil cl "$_"}
 
 $OSTList = @()
 $users = Get-ChildItem 'c:\users'
 foreach ($u in $users){
-$folder = 'C:\users\' + $u.name +"\AppData\Local\Microsoft\Outlook"
+Write-host "Checking $($u.name)"
+$folder = 'C:\users\' + $u.name +"\appdata\local\microsoft"
+Write-Host "Testing $($Folder)"
 $folderpath = test-path -Path $folder
 if($folderpath)
 {
-$OSTList += Get-ChildItem $folder -filter *.ost | where-object {($_.LastWriteTime -lt (Get-Date).AddDays(-60)) } 
-$OSTList | remove-item -force -verbose
-$SpaceReport += "Deleted OST file for $($u.name) `n"
-} else {
-Write-Output "OST file does not exist or meet criteria for $user `n"
+$folderpath
+$OSTList += (Get-ChildItem $Folder -filter "*.ost" -Recurse -Force | where-object {($_.LastWriteTime -lt (Get-Date).AddDays(-60))}).fullname
 }
 }
+
+Foreach ($OST in $OSTList){
+Remove-Item -Path $OST -Force
+$SpaceReport += "Deleted $($OST)"
+}
+$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$SpaceReport += "Free space after removing old OST files - $($Freespace)"
 
 
 $FreespaceAfter = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+
 $SpaceReport += "Free Space Before: {0}" -f $FreespaceBefore
 $SpaceReport += "Free Space After: {0}" -f $FreespaceAfter
 
