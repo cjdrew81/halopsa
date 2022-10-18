@@ -3,8 +3,8 @@ param(
 )
 
 $SpaceReport = @()
-$FreespaceBefore = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SpaceReport += "Free Space at start of script - $($FreeSpaceBefore)"
+$FreespaceBefore = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SpaceReport += "Free Space at start of script - $($FreeSpaceBefore) GB"
 
 # This will empty the recycle bin
 
@@ -13,15 +13,15 @@ $objShell = New-Object -ComObject Shell.Application
 $objFolder = $objShell.Namespace(0xA)
 $objFolder.items() | %{ remove-item $_.path -Recurse -Confirm:$true}
 
-$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SpaceReport += "Free Space after Empty Recycle Bin - $($FreeSpace)" 
+$FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SpaceReport += "Free Space after Empty Recycle Bin - $($FreeSpace) GB" 
 
 $Hiber = get-childitem -Force | ? name -eq hiber.sys
 If ($Hiber){
 $HiberSize = $hiber.length / 1024000000 
 powercfg /H off
-$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SpaceReport += "Free Space after disabling hibernation - $($FreeSpace)"
+$FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SpaceReport += "Free Space after disabling hibernation - $($FreeSpace) GB"
 }
 
 test-path C:\Config.Msi
@@ -68,8 +68,8 @@ Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Windows\IEDownloadHistory\
 Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Windows\INetCache\*" -Force -Recurse
 Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Windows\INetCookies\*" -Force -Recurse
 Remove-Item -Path "C:\Users\*\AppData\Local\Microsoft\Terminal Server Client\Cache\*" -Force -Recurse
-$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SpaceReport += "Free space after removing system and user temp files - $($FreeSpace)"
+$FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SpaceReport += "Free space after removing system and user temp files - $($FreeSpace) GB"
 
 
 Write-host "Removing Windows Updates Downloads" -foreground yellow
@@ -79,8 +79,8 @@ Remove-Item -Path "$env:windir\SoftwareDistribution\*" -Force -Recurse
 Remove-Item $env:windir\Logs\CBS\* -force -recurse
 Start-Service wuauserv -Verbose
 Start-Service TrustedInstaller -Verbose
-$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SpaceReport += "Free Space after removing WIndows Updates cache - $($FreeSpace)"
+$FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SpaceReport += "Free Space after removing WIndows Updates cache - $($FreeSpace) GB"
 
 Write-host "Checkif Windows Cleanup exists" -foreground yellow
 #Mainly for 2008 servers
@@ -127,8 +127,8 @@ if  (-not (get-itemproperty -path 'HKLM:\Software\Microsoft\Windows\CurrentVersi
 }
 
 Start-Process -FilePath CleanMgr.exe -ArgumentList $StateRun  -WindowStyle Hidden -Wait
-$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SPaceReport += "Free space after running disk cleanup tool - $($FreeSpace)"
+$FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SPaceReport += "Free space after running disk cleanup tool - $($FreeSpace) GB"
 
 wevtutil el | Foreach-Object {Write-Host "Clearing $_"; wevtutil cl "$_"}
 
@@ -148,10 +148,8 @@ Remove-Item -Path $OST -Force
 $SpaceReport += "Deleted $($OST)"
 }
 
-$FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
-$SpaceReport += "Free space after removing old OST files - $($Freespace)"
-
-$FreespaceAfter = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
+$FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
+$SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 
 $SpaceReport += "Free Space Before: {0}" -f $FreespaceBefore
 $SpaceReport += "Free Space After: {0}" -f $FreespaceAfter
