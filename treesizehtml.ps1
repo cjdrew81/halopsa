@@ -111,10 +111,10 @@ function TreeSizeHtml {
 
 	#>
     param (
-       [Parameter(Mandatory=$true)][String] $paths,
-       [Parameter(Mandatory=$true)][String] $reportOutputFolder,
-       [Parameter(Mandatory=$false)][String] $htmlOutputFilenames = $null,
-       [Parameter(Mandatory=$false)][String] $zipOutputFilename = $null,
+       [Parameter(Mandatory=$true)][String] $paths = "C:\Users",
+       [Parameter(Mandatory=$true)][String] $reportOutputFolder = "C:\Windows\Temp",
+       [Parameter(Mandatory=$false)][String] $htmlOutputFilenames = "TreeSizeReport.html",
+       [Parameter(Mandatory=$false)][String] $zipOutputFilename = "TreeSizeReport.zip",
        [Parameter(Mandatory=$false)][int] $topFilesCountPerFolder = 10,
        [Parameter(Mandatory=$false)][int] $folderSizeFilterDepthThreshold = 2,
        [Parameter(Mandatory=$false)][long] $folderSizeFilterMinSize = 104857600,
