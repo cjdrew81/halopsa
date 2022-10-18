@@ -32,22 +32,22 @@ test-path $env:windir\memory.dmp
 
 if (test-path C:\Config.Msi) {
 Get-Item 'C:\Config.msi'
-#remove-item -Path C:\Config.Msi -force -recurse
+remove-item -Path C:\Config.Msi -force -recurse
 }
 if (test-path c:\Intel) {
 Get-ChildItem 'c:\Intel' -Recurse -Force
-#remove-item -Path c:\Intel -force -recurse
+remove-item -Path c:\Intel -force -recurse
 }
 if (test-path c:\PerfLogs){
 Get-ChildItem 'c:\PerfLogs' -Recurse -Force
-#remove-item -Path c:\PerfLogs -force -recurse
+remove-item -Path c:\PerfLogs -force -recurse
 }
 if (test-path c:\swsetup) {
 Get-ChildItem 'c:\swsetup' -Recurse -Force
-#remove-item -Path c:\swsetup -force -recurse
+remove-item -Path c:\swsetup -force -recurse
 } # HP Software and Driver Repositry
 if (test-path $env:windir\memory.dmp) {
-#remove-item $env:windir\memory.dmp -force
+remove-item $env:windir\memory.dmp -force
 }
 
 # Deleting Windows Error Reporting files
@@ -75,9 +75,7 @@ $SpaceReport += "Free space after removing system and user temp files - $($FreeS
 Write-host "Removing Windows Updates Downloads" -foreground yellow
 Stop-Service wuauserv -Force -Verbose
 Stop-Service TrustedInstaller -Force -Verbose
-$SpaceReport += Get-Item -Path "$env:windir\SoftwareDistribution\*" -Force -Recurse
 Remove-Item -Path "$env:windir\SoftwareDistribution\*" -Force -Recurse
-$SpaceReport += Get-Item $env:windir\Logs\CBS\* -force -recurse
 Remove-Item $env:windir\Logs\CBS\* -force -recurse
 Start-Service wuauserv -Verbose
 Start-Service TrustedInstaller -Verbose
@@ -137,13 +135,10 @@ wevtutil el | Foreach-Object {Write-Host "Clearing $_"; wevtutil cl "$_"}
 $OSTList = @()
 $users = Get-ChildItem 'c:\users'
 foreach ($u in $users){
-Write-host "Checking $($u.name)"
 $folder = 'C:\users\' + $u.name +"\appdata\local\microsoft"
-Write-Host "Testing $($Folder)"
 $folderpath = test-path -Path $folder
 if($folderpath)
 {
-$folderpath
 $OSTList += (Get-ChildItem $Folder -filter "*.ost" -Recurse -Force | where-object {($_.LastWriteTime -lt (Get-Date).AddDays(-60))}).fullname
 }
 }
@@ -152,9 +147,9 @@ Foreach ($OST in $OSTList){
 Remove-Item -Path $OST -Force
 $SpaceReport += "Deleted $($OST)"
 }
+
 $FreeSpace = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
 $SpaceReport += "Free space after removing old OST files - $($Freespace)"
-
 
 $FreespaceAfter = (Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB
 
