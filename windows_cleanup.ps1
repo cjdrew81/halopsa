@@ -16,42 +16,31 @@ $objFolder.items() | %{ remove-item $_.path -Recurse -Confirm:$true}
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
 $SpaceReport += "Free Space after Empty Recycle Bin - $($FreeSpace) GB" 
 
-$Hiber = get-childitem -Force | ? name -eq hiber.sys
+$Hiber = test-path 'C:\hiber.sys'
 If ($Hiber){
-$HiberSize = $hiber.length / 1024000000 
 powercfg /H off
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
 $SpaceReport += "Free Space after disabling hibernation - $($FreeSpace) GB"
 }
 
-test-path C:\Config.Msi
-test-path c:\Intel
-test-path c:\PerfLogs
-test-path c:\swsetup
-test-path $env:windir\memory.dmp
-
-if (test-path C:\Config.Msi) {
-Get-Item 'C:\Config.msi'
-remove-item -Path C:\Config.Msi -force -recurse
+if (test-path 'C:\Config.Msi') {
+remove-item -Path 'C:\Config.Msi' -force -recurse
 }
-if (test-path c:\Intel) {
-Get-ChildItem 'c:\Intel' -Recurse -Force
-remove-item -Path c:\Intel -force -recurse
+if (test-path 'c:\Intel') {
+remove-item -Path 'c:\Intel' -force -recurse
 }
-if (test-path c:\PerfLogs){
-Get-ChildItem 'c:\PerfLogs' -Recurse -Force
-remove-item -Path c:\PerfLogs -force -recurse
+if (test-path 'c:\PerfLogs'){
+remove-item -Path 'c:\PerfLogs' -force -recurse
 }
-if (test-path c:\swsetup) {
-Get-ChildItem 'c:\swsetup' -Recurse -Force
-remove-item -Path c:\swsetup -force -recurse
-} # HP Software and Driver Repositry
-if (test-path $env:windir\memory.dmp) {
-remove-item $env:windir\memory.dmp -force
+if (test-path 'c:\swsetup') {
+remove-item -Path 'c:\swsetup' -force -recurse
+}
+if (test-path '$env:windir\memory.dmp') {
+remove-item '$env:windir\memory.dmp' -force
 }
 
 # Deleting Windows Error Reporting files
-if (test-path C:\ProgramData\Microsoft\Windows\WER) {Get-ChildItem -Path C:\ProgramData\Microsoft\Windows\WER -Recurse | Remove-Item -force -recurse}
+if (test-path 'C:\ProgramData\Microsoft\Windows\WER'){Get-ChildItem -Path C:\ProgramData\Microsoft\Windows\WER -Recurse | Remove-Item -force -recurse}
 
 
 
@@ -151,8 +140,7 @@ $SpaceReport += "Deleted $($OST)"
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
 $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 
-$SpaceReport += "Free Space Before: {0}" -f $FreespaceBefore
-$SpaceReport += "Free Space After: {0}" -f $FreespaceAfter
+
 
 
 
@@ -175,7 +163,7 @@ $filesLocation = 'C:\'
 $largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "SilentlyContinue" | ? { $_.GetType().Name -eq "FileInfo" } | where-Object {$_.Length -gt $fileSize} | sort-Object -property length -Descending | Select-Object Name, @{Name="Size In MB";Expression={ "{0:N0}" -f ($_.Length / 1MB)}},@{Name="LastWriteTime";Expression={$_.LastWriteTime}},@{Name="Path";Expression={$_.directory}} -first $filesLimit
 $Report = $largeSizefiles | convertto-html -head $EmailHeader
 
-$Space = "------------------------------"
+$FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1]}} | convertto-html -Fragment
 
 $DiskInfo = Get-PhysicalDisk | Select mediatype,friendlyname,operationalstatus,healthstatus,@{L = "Size"; E = {[math]::round($_.size / 1GB,2)}} | convertto-html
 
@@ -195,7 +183,7 @@ $message.From = $fromaddress
 $message.To.Add($toaddress)
 $message.Subject = $Subject
 #$message.Attachments.Add($attachment)
-$message.body = $SpaceReport + $Report + $Space + $DiskInfo
+$message.body = $Report + $FreeSpaceReport + $DiskInfo
 $SMTP = "cloud10-it.mail.protection.outlook.com"
 $smtp = New-Object Net.Mail.SmtpClient($smtp, $port)
 $smtp.EnableSsl = $true
