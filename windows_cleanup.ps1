@@ -156,6 +156,6 @@ $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] 
 $FreespaceReport | out-file 'c:\scripts\freespacereport.txt'
 
 $DiskInfo = Get-PhysicalDisk | Select mediatype,friendlyname,operationalstatus,healthstatus,@{L = "Size"; E = {[math]::round($_.size / 1GB,2)}} | convertto-html | out-file 'c:\scripts\drives.html'
-
+$FreeSpaceReport
 
 
