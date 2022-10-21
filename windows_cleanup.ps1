@@ -2,9 +2,9 @@ param(
 [string]$TicketID
 )
 
-$FolderTest = Test-Path 'c:\script'
+$FolderTest = Test-Path 'c:\scripts'
 If (!$FolderTest){
-New-Item -Path c:\ -Name Script -ItemType Directory -Force
+New-Item -Path c:\ -Name Scripts -ItemType Directory -Force
 }
 
 
@@ -137,11 +137,12 @@ if($folderpath)
 $OSTList += (Get-ChildItem $Folder -filter "*.ost" -Recurse -Force | where-object {($_.LastWriteTime -lt (Get-Date).AddDays(-60))}).fullname
 }
 }
-
+If ($OSTList){
 Foreach ($OST in $OSTList){
 Remove-Item -Path $OST -Force
 $SpaceReport += "Deleted $($OST)"
 }
+} else {$SpaceReport += "No OST files found to remove"}
 
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
 $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
@@ -149,12 +150,12 @@ $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 $fileslimit = 30
 $filesLocation = 'C:\'
 $largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "SilentlyContinue" | ? { $_.GetType().Name -eq "FileInfo" } | where-Object {$_.Length -gt $fileSize} | sort-Object -property length -Descending | Select-Object Name, @{Name="Size In MB";Expression={ "{0:N0}" -f ($_.Length / 1MB)}},@{Name="LastWriteTime";Expression={$_.LastWriteTime}},@{Name="Path";Expression={$_.directory}} -first $filesLimit
-$Report = $largeSizefiles | convertto-html -head $EmailHeader
+$Report = $largeSizefiles | convertto-html | out-file 'c:\scripts\filelist.html'
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1]}} | convertto-html -Fragment
-$FreespaceReport | out-file 'c:\windows\temp\freespacereport.txt'
+$FreespaceReport | out-file 'c:\scripts\freespacereport.txt'
 
-$DiskInfo = Get-PhysicalDisk | Select mediatype,friendlyname,operationalstatus,healthstatus,@{L = "Size"; E = {[math]::round($_.size / 1GB,2)}} | convertto-html | 
+$DiskInfo = Get-PhysicalDisk | Select mediatype,friendlyname,operationalstatus,healthstatus,@{L = "Size"; E = {[math]::round($_.size / 1GB,2)}} | convertto-html | out-file 'c:\scripts\drives.html'
 
 
 
