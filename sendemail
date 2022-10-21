@@ -1,0 +1,31 @@
+$to = ""
+$from = ""
+$Subject = "Low Disk Space Report - [ID:00@TicketID@]"
+
+$headers = @{}
+$headers.Add("Authorization", "")
+$headers.Add("Content-Type", "application/json")
+
+$FileContent = get-content "c:\windows\temp\reportzip.html"
+$ConvertToBytes = [System.Text.Encoding]::UTF8.GetBytes($FileContent)
+$EncodedFile = [System.Convert]::ToBase64String($ConvertToBytes)
+
+
+$jsonRequest = [ordered]@{
+    personalizations = @(@{to = @(@{email = "$To" })
+            subject           = "$SubJect" 
+        })
+    from             = @{email = "$From" }
+    content          = @( @{ type = "text/plain"
+            value        = "@body@" 
+        }
+    )
+    attachments      = @( @{ 
+            content     = $EncodedFile
+            filename    = "C:\windows\temp\reportzip.html"
+            type        = "application/html"
+            disposition = "attachment"
+        })
+} | ConvertTo-Json -Depth 10
+
+Invoke-RestMethod -Uri 'https://api.sendgrid.com/v3/mail/send' -Method Post -Headers $headers -Body $jsonRequest
