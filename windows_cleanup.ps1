@@ -164,6 +164,7 @@ $largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "Sile
 $Report = $largeSizefiles | convertto-html -head $EmailHeader
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1]}} | convertto-html -Fragment
+$FreespaceReport | out-file 'c:\windows\temp\freespacereport.txt'
 
 $DiskInfo = Get-PhysicalDisk | Select mediatype,friendlyname,operationalstatus,healthstatus,@{L = "Size"; E = {[math]::round($_.size / 1GB,2)}} | convertto-html
 
