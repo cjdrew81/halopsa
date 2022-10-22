@@ -150,7 +150,7 @@ $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 $fileslimit = 20
 $filesLocation = 'C:\'
 $largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "SilentlyContinue" | ? { $_.GetType().Name -eq "FileInfo" } | where-Object {$_.Length -gt $fileSize} | sort-Object -property length -Descending | Select-Object Name, @{Name="Size In MB";Expression={ "{0:N0}" -f ($_.Length / 1MB)}},@{Name="LastWriteTime";Expression={$_.LastWriteTime}},@{Name="Path";Expression={$_.directory}} -first $filesLimit
-$Report = $largeSizefiles | convertto-html | out-file 'c:\scripts\filelist.html'
+$Report = $largeSizefiles | convertto-html -fragment | out-file 'c:\scripts\filelist.html'
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1]}} | convertto-html -Fragment
 $FreespaceReport | out-file 'c:\scripts\freespacereport.txt'
