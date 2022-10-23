@@ -117,7 +117,7 @@ if  (-not (get-itemproperty -path 'HKLM:\Software\Microsoft\Windows\CurrentVersi
     set-itemproperty -path 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Windows Upgrade Log Files' -name $StateFlags -type DWORD -Value 2
 }
 
-Start-Process -FilePath CleanMgr.exe -ArgumentList $StateRun  -WindowStyle Hidden -Wait
+#Start-Process -FilePath CleanMgr.exe -ArgumentList $StateRun  -WindowStyle Hidden -Wait
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace/1GB),2)
 $SPaceReport += "Free space after running disk cleanup tool - $($FreeSpace) GB"
 
