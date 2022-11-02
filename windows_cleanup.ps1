@@ -73,7 +73,7 @@ Start-Service TrustedInstaller -Verbose
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace / 1GB), 2)
 $SpaceReport += "Free Space after removing WIndows Updates cache - $($FreeSpace) GB"
 
-<#
+
 Write-host "Checkif Windows Cleanup exists" -foreground yellow
 #Mainly for 2008 servers
 if (!(Test-Path c:\windows\System32\cleanmgr.exe)) {
@@ -120,7 +120,6 @@ if  (-not (get-itemproperty -path 'HKLM:\Software\Microsoft\Windows\CurrentVersi
 
 Start-Process -FilePath CleanMgr.exe -ArgumentList $StateRun  -WindowStyle Hidden -Wait
 
-#>
 
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace / 1GB), 2)
 $SPaceReport += "Free space after running disk cleanup tool - $($FreeSpace) GB"
@@ -155,9 +154,9 @@ $largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "Sile
 $Report = $largeSizefiles | convertto-html -fragment | out-file 'c:\scripts\filelist.html'
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1] } } | convertto-html -Fragment
-$FreespaceReport | out-file 'c:\scripts\freespacereport.txt'
+$FreespaceReport | out-file 'c:\scripts\freespacereport.html'
 
 $DiskInfo = Get-PhysicalDisk | Select mediatype, friendlyname, operationalstatus, healthstatus, @{L = "Size"; E = { [math]::round($_.size / 1GB, 2) } } | convertto-html | out-file 'c:\scripts\drives.html'
-$FreeSpaceReport
+FreeSpaceReport
 
 
