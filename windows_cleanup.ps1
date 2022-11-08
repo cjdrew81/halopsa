@@ -148,6 +148,7 @@ else { $SpaceReport += "No OST files found to remove" }
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace / 1GB), 2)
 $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 
+$FileSize = '104857600'
 $fileslimit = 20
 $filesLocation = 'C:\'
 $largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "SilentlyContinue" | ? { $_.GetType().Name -eq "FileInfo" } | where-Object { $_.Length -gt $fileSize } | sort-Object -property length -Descending | Select-Object Name, @{Name = "Size In MB"; Expression = { "{0:N0}" -f ($_.Length / 1MB) } }, @{Name = "LastWriteTime"; Expression = { $_.LastWriteTime } }, @{Name = "Path"; Expression = { $_.directory } } -first $filesLimit
