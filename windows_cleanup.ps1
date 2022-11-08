@@ -148,14 +148,11 @@ else { $SpaceReport += "No OST files found to remove" }
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace / 1GB), 2)
 $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 
-$FileSize = '104857600'
-$fileslimit = 20
-$filesLocation = 'C:\'
-$largeSizefiles = get-ChildItem -path $filesLocation -recurse -ErrorAction "SilentlyContinue" | ? { $_.GetType().Name -eq "FileInfo" } | where-Object { $_.Length -gt $fileSize } | sort-Object -property length -Descending | Select-Object Name, @{Name = "Size In MB"; Expression = { "{0:N0}" -f ($_.Length / 1MB) } }, @{Name = "LastWriteTime"; Expression = { $_.LastWriteTime } }, @{Name = "Path"; Expression = { $_.directory } } -first $filesLimit
-$Report = $largeSizefiles | convertto-html -fragment | out-file 'c:\scripts\filelist.html'
+$Files = Get-ChildItem "c:\users" -r| sort -descending -property length | select -first 20 name, Length
+$files | select name,@{L = "Size"; E = {[Math]::round(($_.length / 1MB),2)}} | Convertto-HTML -Fragment | Out-File "c:\scripts\filelist.html"
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1] } } | convertto-html -Fragment
-$FreespaceReport | out-file 'c:\scripts\freespacereport.html'
+$FreespaceReport | out-file "c:\scripts\freespacereport.html"
 
 $DiskInfo = Get-PhysicalDisk | Select mediatype, friendlyname, operationalstatus, healthstatus, @{L = "Size"; E = { [math]::round($_.size / 1GB, 2) } } | convertto-html | out-file 'c:\scripts\drives.html'
 FreeSpaceReport
