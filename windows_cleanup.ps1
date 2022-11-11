@@ -148,8 +148,8 @@ else { $SpaceReport += "No OST files found to remove" }
 $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='C:'" | select Freespace).FreeSpace / 1GB), 2)
 $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 
-$Files = Get-ChildItem "c:\users" -r| sort -descending -property length | select -first 20 name, Length
-$files | select name,@{L = "Size"; E = {[Math]::round(($_.length / 1MB),2)}} | Convertto-HTML -Fragment | Out-File "c:\scripts\filelist.html"
+$Files = Get-ChildItem "c:\users" -r| sort -descending -property length | select -first 20 fullname, Length
+$files | select fullname,@{L = "Size"; E = {[Math]::round(($_.length / 1MB),2)}} | Convertto-HTML -Fragment | Out-File "c:\scripts\filelist.html"
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1] } } | convertto-html -Fragment
 $FreespaceReport | out-file "c:\scripts\freespacereport.html"
