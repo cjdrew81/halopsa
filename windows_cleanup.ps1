@@ -149,10 +149,10 @@ $FreeSpace = [math]::Round(((Get-WmiObject win32_logicaldisk -filter "DeviceID='
 $SpaceReport += "Free space after removing old OST files - $($Freespace) GB"
 
 $Files = Get-ChildItem "c:\users" -r| sort -descending -property length | select -first 20 fullname, Length
-$files | select fullname,@{L = "Size"; E = {[Math]::round(($_.length / 1MB),2)}} | Convertto-HTML -Fragment | Out-File "c:\scripts\filelist.html"
+$files | select fullname,@{L = "Size"; E = {[Math]::round(($_.length / 1MB),2)}} | Convertto-HTML -Fragment | Out-File "c:\scripts\filelist.html" -force
 
 $FreespaceReport = $SpaceReport | select @{L = "Task"; E = { ($_.split("-"))[0] } }, @{L = "Free Space" ; E = { ($_.split("-"))[1] } } | convertto-html -Fragment
-$FreespaceReport | out-file "c:\scripts\freespacereport.html"
+$FreespaceReport | out-file "c:\scripts\freespacereport.html" -force
 
 $DiskInfo = Get-PhysicalDisk | Select mediatype, friendlyname, operationalstatus, healthstatus, @{L = "Size"; E = { [math]::round($_.size / 1GB, 2) } } | convertto-html | out-file 'c:\scripts\drives.html'
 FreeSpaceReport
